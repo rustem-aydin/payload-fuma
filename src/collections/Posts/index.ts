@@ -9,8 +9,11 @@ import {
   lexicalEditor,
 } from "@payloadcms/richtext-lexical";
 
-import { authenticated } from "../../access/authenticated";
-import { authenticatedOrPublished } from "../../access/authenticatedOrPublished";
+// Yeni access importları
+import { isAdminOrEditor } from "../../access/isAdminOrEditor";
+import { isGroupEditorOrPublished } from "../../access/isGroupEditorOrPublished";
+import { isGroupEditor } from "../../access/isGroupEditor";
+
 import { Banner } from "../../blocks/Banner/config";
 import { Code } from "../../blocks/Code/config";
 import { MediaBlock } from "../../blocks/MediaBlock/config";
@@ -29,11 +32,15 @@ import { slugField } from "payload";
 
 export const Posts: CollectionConfig<"posts"> = {
   slug: "posts",
+  labels: {
+    singular: "Yazı",
+    plural: "Yazılar",
+  },
   access: {
-    create: authenticated,
-    delete: authenticated,
-    read: authenticatedOrPublished,
-    update: authenticated,
+    create: isAdminOrEditor, // Admin veya Editör
+    read: isGroupEditorOrPublished, // Admin/Grup Editörü veya Yayınlanmış
+    update: isGroupEditor, // Admin veya Kendi Grubundaki Editör
+    delete: isGroupEditor, // Admin veya Kendi Grubundaki Editör
   },
 
   defaultPopulate: {
@@ -46,7 +53,7 @@ export const Posts: CollectionConfig<"posts"> = {
     },
   },
   admin: {
-    defaultColumns: ["title", "slug", "updatedAt"],
+    defaultColumns: ["title", "slug", "updatedAt", "_status"],
     livePreview: {
       url: ({ data, req }) =>
         generatePreviewPath({
@@ -64,6 +71,28 @@ export const Posts: CollectionConfig<"posts"> = {
     useAsTitle: "title",
   },
   fields: [
+    // GİZLİ GRUP ALANI (Veritabanı filtrelemesi için gerekli ama admin panelinde gizli)
+    {
+      name: "group",
+      type: "relationship",
+      relationTo: "groups",
+      hidden: true,
+      hooks: {
+        beforeChange: [
+          ({ value, req, operation }: any) => {
+            // Yeni yazı oluşturulurken editörün grubunu otomatik damgala
+            if (
+              operation === "create" &&
+              req.user?.roles?.includes("editor") &&
+              req.user.group
+            ) {
+              return req.user.group.id || req.user.group;
+            }
+            return value;
+          },
+        ],
+      },
+    },
     {
       name: "title",
       label: "Başlık",
@@ -75,16 +104,17 @@ export const Posts: CollectionConfig<"posts"> = {
       type: "tabs",
       tabs: [
         {
+          label: "İçerik",
           fields: [
             {
               name: "heroImage",
-              label: "Blog Resmi",
+              label: "Kapak Resmi",
               type: "upload",
               relationTo: "media",
             },
             {
               name: "content",
-              label: "Blog İçeriği",
+              label: "Yazı İçeriği",
               type: "richText",
               editor: lexicalEditor({
                 features: ({ rootFeatures }) => {
@@ -103,41 +133,10 @@ export const Posts: CollectionConfig<"posts"> = {
               required: true,
             },
           ],
-          label: "İçerik",
-        },
-        {
-          fields: [
-            {
-              name: "relatedPosts",
-              type: "relationship",
-              admin: {
-                position: "sidebar",
-              },
-              filterOptions: ({ id }) => {
-                return {
-                  id: {
-                    not_in: [id],
-                  },
-                };
-              },
-              hasMany: true,
-              relationTo: "posts",
-            },
-            {
-              name: "categories",
-              type: "relationship",
-              admin: {
-                position: "sidebar",
-              },
-              hasMany: true,
-              relationTo: "categories",
-            },
-          ],
-          label: "Meta",
         },
         {
           name: "meta",
-          label: "SEO",
+          label: "SEO Ayarları",
           fields: [
             OverviewField({
               titlePath: "meta.title",
@@ -153,10 +152,7 @@ export const Posts: CollectionConfig<"posts"> = {
 
             MetaDescriptionField({}),
             PreviewField({
-              // if the `generateUrl` function is configured
               hasGenerateFn: true,
-
-              // field paths to match the target field for data
               titlePath: "meta.title",
               descriptionPath: "meta.description",
             }),
@@ -187,6 +183,7 @@ export const Posts: CollectionConfig<"posts"> = {
     },
     {
       name: "authors",
+      label: "Yazarlar",
       type: "relationship",
       relationTo: "users",
       required: true,
@@ -196,7 +193,26 @@ export const Posts: CollectionConfig<"posts"> = {
         readOnly: true,
       },
     },
-
+    {
+      name: "relatedPosts",
+      label: "İlgili Yazılar",
+      type: "relationship",
+      admin: {
+        position: "sidebar",
+      },
+      hasMany: true,
+      relationTo: "posts",
+    },
+    {
+      name: "categories",
+      label: "Kategoriler",
+      type: "relationship",
+      admin: {
+        position: "sidebar",
+      },
+      hasMany: true,
+      relationTo: "categories",
+    },
     {
       name: "populatedAuthors",
       type: "array",
@@ -228,7 +244,7 @@ export const Posts: CollectionConfig<"posts"> = {
   versions: {
     drafts: {
       autosave: {
-        interval: 100, // We set this interval for optimal live preview
+        interval: 100,
       },
       schedulePublish: true,
     },

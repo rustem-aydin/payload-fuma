@@ -16,6 +16,7 @@ import { plugins } from "./plugins";
 import { defaultLexical } from "@/fields/defaultLexical";
 import { Pages } from "./collections/Pages";
 import { env } from "@/env"; // Kendi env dosyanı import et
+import { Groups } from "./collections/Groups";
 
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
@@ -48,7 +49,14 @@ export default buildConfig({
     },
   }),
 
-  collections: [Pages, Posts, Media, Categories, Users],
+  collections: [
+    Pages,
+    Posts,
+    Media,
+    Categories,
+    Users,
+    Groups, // <--- 2. BURAYA EKLEYİN
+  ],
   globals: [],
   cors: [process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:3000"].filter(
     Boolean,
