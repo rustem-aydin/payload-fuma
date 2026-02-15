@@ -1,0 +1,41 @@
+import { betterAuth } from 'better-auth'
+import { drizzleAdapter } from 'better-auth/adapters/drizzle'
+import { multiSession } from 'better-auth/plugins'
+import { headers } from 'next/headers'
+import { env } from '@/env'
+import { db } from '@/server/db'
+
+export const auth = betterAuth({
+  baseURL: env.NEXT_PUBLIC_BASE_URL,
+  database: drizzleAdapter(db, {
+    provider: 'pg',
+    usePlural: true,
+  }),
+  plugins: [multiSession()],
+  socialProviders: {
+    google: {
+      clientId: env.GOOGLE_CLIENT_ID,
+      clientSecret: env.GOOGLE_CLIENT_SECRET,
+    },
+    github: {
+      clientId: env.GITHUB_CLIENT_ID,
+      clientSecret: env.GITHUB_CLIENT_SECRET,
+    },
+  },
+  user: {
+    additionalFields: {
+      role: {
+        type: 'string',
+        required: true,
+        input: false,
+        defaultValue: 'user',
+      },
+    },
+  },
+})
+
+export const getSession = async () => {
+  return await auth.api.getSession({
+    headers: await headers(),
+  })
+}
