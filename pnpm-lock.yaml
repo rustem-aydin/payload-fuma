@@ -38,6 +38,9 @@ importers:
       '@payloadcms/db-postgres':
         specifier: ^3.76.1
         version: 3.76.1(@neondatabase/serverless@1.0.2)(kysely@0.28.11)(payload@3.76.1(graphql@16.12.0)(typescript@5.9.3))
+      '@payloadcms/drizzle':
+        specifier: ^3.76.1
+        version: 3.76.1(@neondatabase/serverless@1.0.2)(@types/pg@8.16.0)(kysely@0.28.11)(payload@3.76.1(graphql@16.12.0)(typescript@5.9.3))(pg@8.18.0)
       '@payloadcms/live-preview-react':
         specifier: ^3.76.1
         version: 3.76.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -8568,6 +8571,46 @@ snapshots:
       - sql.js
       - sqlite3
 
+  '@payloadcms/drizzle@3.76.1(@neondatabase/serverless@1.0.2)(@types/pg@8.16.0)(kysely@0.28.11)(payload@3.76.1(graphql@16.12.0)(typescript@5.9.3))(pg@8.18.0)':
+    dependencies:
+      console-table-printer: 2.12.1
+      dequal: 2.0.3
+      drizzle-orm: 0.44.7(@neondatabase/serverless@1.0.2)(@types/pg@8.16.0)(kysely@0.28.11)(pg@8.18.0)
+      payload: 3.76.1(graphql@16.12.0)(typescript@5.9.3)
+      prompts: 2.4.2
+      to-snake-case: 1.0.0
+      uuid: 9.0.0
+    transitivePeerDependencies:
+      - '@aws-sdk/client-rds-data'
+      - '@cloudflare/workers-types'
+      - '@electric-sql/pglite'
+      - '@libsql/client'
+      - '@libsql/client-wasm'
+      - '@neondatabase/serverless'
+      - '@op-engineering/op-sqlite'
+      - '@opentelemetry/api'
+      - '@planetscale/database'
+      - '@prisma/client'
+      - '@tidbcloud/serverless'
+      - '@types/better-sqlite3'
+      - '@types/pg'
+      - '@types/sql.js'
+      - '@upstash/redis'
+      - '@vercel/postgres'
+      - '@xata.io/client'
+      - better-sqlite3
+      - bun-types
+      - expo-sqlite
+      - gel
+      - knex
+      - kysely
+      - mysql2
+      - pg
+      - postgres
+      - prisma
+      - sql.js
+      - sqlite3
+
   '@payloadcms/graphql@3.76.1(graphql@16.12.0)(payload@3.76.1(graphql@16.12.0)(typescript@5.9.3))(typescript@5.9.3)':
     dependencies:
       graphql: 16.12.0
@@ -10644,6 +10687,13 @@ snapshots:
       '@types/pg': 8.10.2
       kysely: 0.28.11
       pg: 8.16.3
+
+  drizzle-orm@0.44.7(@neondatabase/serverless@1.0.2)(@types/pg@8.16.0)(kysely@0.28.11)(pg@8.18.0):
+    optionalDependencies:
+      '@neondatabase/serverless': 1.0.2
+      '@types/pg': 8.16.0
+      kysely: 0.28.11
+      pg: 8.18.0
 
   drizzle-orm@0.45.1(@neondatabase/serverless@1.0.2)(@types/pg@8.16.0)(kysely@0.28.11)(pg@8.18.0):
     optionalDependencies:

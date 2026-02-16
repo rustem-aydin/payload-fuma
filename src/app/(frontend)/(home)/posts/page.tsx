@@ -36,7 +36,7 @@ export default async function Page(props: {
   if (query) {
     const searchResults = await payload.find({
       collection: "search",
-      depth: 0, // Depth 0 yapıyoruz, sadece ID'ler lazım
+      depth: 0,
       limit: postsPerPage,
       page: currentPage,
       where: {

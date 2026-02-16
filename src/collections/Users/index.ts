@@ -1,87 +1,101 @@
-import type { CollectionConfig, Access } from "payload";
-
-// Yardımcı Erişim Fonksiyonları
-const isAdmin: Access = ({ req: { user } }) =>
-  Boolean(user?.roles?.includes("admin"));
-
-const isAdminOrSelf: Access = ({ req: { user }, id }) => {
-  // Admin ise her şeye yetkisi var
-  if (user?.roles?.includes("admin")) return true;
-
-  // Değilse sadece kendi ID'si ile eşleşen veriye yetkisi var
-  if (user) {
-    return {
-      id: {
-        equals: user.id,
-      },
-    };
-  }
-
-  return false;
-};
+import { isAdminOrGroupEditor, isFieldAdmin } from "@/access";
+import type { CollectionConfig } from "payload";
 
 export const Users: CollectionConfig = {
   slug: "users",
-  auth: {
-    // Token süresi vb. ayarlar buraya gelebilir
-    tokenExpiration: 7200, // 2 saat
-  },
+  auth: true,
   admin: {
+    hidden: ({ user }) => user?.roles !== "admin",
+
     useAsTitle: "name",
-    defaultColumns: ["name", "email", "roles", "group"], // Listede rolleri ve grupları da görelim
+    defaultColumns: ["name", "email", "roles", "group"],
+    // Editörler sadece Posts ve Users görebilir demiştiniz.
+    // Users'ı görebilmeli ki kullanıcı ekleyebilsinler.
   },
   access: {
-    // Sadece adminler kullanıcı listesini tam görebilir, diğerleri sadece kendini
-    read: isAdminOrSelf,
-    // Yeni kullanıcı oluşturma (Proje yapınıza göre değişebilir, şimdilik sadece Admin)
-    create: isAdmin,
-    // Güncelleme: Admin herkesi, kullanıcı kendini
-    update: isAdminOrSelf,
-    // Silme: Sadece Admin
-    delete: isAdmin,
+    read: isAdminOrGroupEditor,
+    // Admin veya Editör yeni kullanıcı ekleyebilir
+    create: ({ req: { user } }) => {
+      if (!user) return false;
+      // checkRole fonksiyonunu burada tekrar inline yazabilir veya import edebilirsiniz
+      const role = user.roles as string;
+      return role === "admin" || role === "editor";
+    },
+    update: isAdminOrGroupEditor,
+    delete: isAdminOrGroupEditor,
   },
   fields: [
     {
       name: "name",
-      label: "Ad Soyad",
       type: "text",
+      required: true,
     },
     {
       name: "roles",
-      label: "Roller",
       type: "select",
-      hasMany: true,
-      saveToJWT: true, // ÖNEMLİ: Rol bilgisini her istekte erişilebilir yapar
-      defaultValue: ["user"],
+      hasMany: false, // İSTEK 1: Her kullanıcıya tek rol
+      saveToJWT: true,
+      defaultValue: "user",
+      required: true,
+      access: {
+        // Sadece Admin bu alanı UI üzerinden değiştirebilir
+        update: isFieldAdmin,
+        create: isFieldAdmin,
+      },
+      // İSTEK 3: Editörler rolleri göremez
+      admin: {
+        condition: (_data, _siblingData, { user }) => {
+          return user?.roles === "admin";
+        },
+      },
       options: [
         { label: "Yönetici (Admin)", value: "admin" },
         { label: "Editör", value: "editor" },
         { label: "Standart Kullanıcı", value: "user" },
       ],
-      access: {
-        // Sadece adminler birinin rolünü değiştirebilir
-        // (Kullanıcı kendi profilini güncellerken kendisini Admin yapamasın diye)
-        update: ({ req: { user } }) => Boolean(user?.roles?.includes("admin")),
-      },
     },
     {
       name: "group",
-      label: "Bağlı Olduğu Grup/Ekip",
       type: "relationship",
       relationTo: "groups",
-      hasMany: false,
-      saveToJWT: true, // ÖNEMLİ: Posts koleksiyonunda `req.user.group` diyebilmek için gerekli
+      // İSTEK 3: Editörler grubu göremez
       admin: {
         position: "sidebar",
-        // Bu alan sadece seçilen rol 'editor' içeriyorsa görünsün
-        condition: (data, siblingData) =>
-          siblingData?.roles?.includes("editor"),
+        condition: (_data, _siblingData, { user }) => {
+          return user?.roles === "admin";
+        },
       },
       access: {
-        // Sadece adminler birini bir gruba atayabilir
-        update: ({ req: { user } }) => Boolean(user?.roles?.includes("admin")),
+        update: isFieldAdmin, // Grubu sadece admin değiştirebilir
       },
     },
   ],
-  timestamps: true,
+  hooks: {
+    beforeChange: [
+      ({ req, operation, data }) => {
+        // İSTEK 3 (Devamı): Otomatik atama
+        if (operation === "create" && req.user) {
+          // Eğer işlemi yapan kişi Admin DEĞİLSE (yani Editör ise)
+          if (req.user.roles !== "admin") {
+            // 1. Oluşturan editörün grubunu yeni kullanıcıya ata
+            if (req.user.group) {
+              // Group bazen obje bazen ID gelebilir, kontrol et
+              const groupID =
+                typeof req.user.group === "object"
+                  ? req.user.group.id
+                  : req.user.group;
+              data.group = groupID;
+            }
+
+            // 2. Rolü otomatik olarak 'user' (veya isterseniz 'editor') ata
+            // Editör kendi altına birini ekliyorsa genelde 'user' olur.
+            // Ama "editör kullanıcısı oluşturabilecek" dediğiniz için 'editor' de yapabilirsiniz.
+            // Burayı ihtiyacınıza göre değiştirin:
+            data.roles = "user";
+          }
+        }
+        return data;
+      },
+    ],
+  },
 };

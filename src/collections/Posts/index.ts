@@ -9,7 +9,7 @@ import {
   lexicalEditor,
 } from "@payloadcms/richtext-lexical";
 
-// Yeni access importları
+// Access importlarınızın doğru yolda olduğundan emin olun
 import { isAdminOrEditor } from "../../access/isAdminOrEditor";
 import { isGroupEditorOrPublished } from "../../access/isGroupEditorOrPublished";
 import { isGroupEditor } from "../../access/isGroupEditor";
@@ -30,19 +30,18 @@ import {
 } from "@payloadcms/plugin-seo/fields";
 import { slugField } from "payload";
 
-export const Posts: CollectionConfig<"posts"> = {
+export const Posts: CollectionConfig = {
   slug: "posts",
   labels: {
     singular: "Yazı",
     plural: "Yazılar",
   },
   access: {
-    create: isAdminOrEditor, // Admin veya Editör
-    read: isGroupEditorOrPublished, // Admin/Grup Editörü veya Yayınlanmış
-    update: isGroupEditor, // Admin veya Kendi Grubundaki Editör
-    delete: isGroupEditor, // Admin veya Kendi Grubundaki Editör
+    create: isAdminOrEditor,
+    read: isGroupEditorOrPublished,
+    update: isGroupEditor,
+    delete: isGroupEditor,
   },
-
   defaultPopulate: {
     title: true,
     slug: true,
@@ -53,46 +52,55 @@ export const Posts: CollectionConfig<"posts"> = {
     },
   },
   admin: {
+    useAsTitle: "title",
     defaultColumns: ["title", "slug", "updatedAt", "_status"],
+    // Preview Ayarı (URL'in tam gitmesi için düzeltildi)
     livePreview: {
-      url: ({ data, req }) =>
-        generatePreviewPath({
-          slug: data?.slug,
+      url: ({ data, req }) => {
+        const path = generatePreviewPath({
+          slug: typeof data?.slug === "string" ? data.slug : "",
           collection: "posts",
           req,
-        }),
+        });
+        return `${process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:3000"}${path}`;
+      },
     },
-    preview: (data, { req }) =>
-      generatePreviewPath({
-        slug: data?.slug as string,
+    preview: (data, { req }) => {
+      const path = generatePreviewPath({
+        slug: typeof data?.slug === "string" ? data.slug : "",
         collection: "posts",
         req,
-      }),
-    useAsTitle: "title",
+      });
+      return `${process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:3000"}${path}`;
+    },
   },
   fields: [
-    // GİZLİ GRUP ALANI (Veritabanı filtrelemesi için gerekli ama admin panelinde gizli)
+    // --- GRUP ALANI (Gizli & Otomatik) ---
     {
       name: "group",
       type: "relationship",
       relationTo: "groups",
-      hidden: true,
+      hidden: true, // Admin panelde gizli
       hooks: {
         beforeChange: [
-          ({ value, req, operation }: any) => {
-            // Yeni yazı oluşturulurken editörün grubunu otomatik damgala
+          ({ value, req, operation }) => {
+            // Create işleminde, editörse ve grubu varsa ata
+            // Not: User rolleri artık string olduğu için '===' kullanıyoruz
             if (
               operation === "create" &&
-              req.user?.roles?.includes("editor") &&
+              req.user?.roles === "editor" &&
               req.user.group
             ) {
-              return req.user.group.id || req.user.group;
+              return typeof req.user.group === "object"
+                ? req.user.group.id
+                : req.user.group;
             }
             return value;
           },
         ],
       },
     },
+
     {
       name: "title",
       label: "Başlık",
@@ -143,13 +151,8 @@ export const Posts: CollectionConfig<"posts"> = {
               descriptionPath: "meta.description",
               imagePath: "meta.image",
             }),
-            MetaTitleField({
-              hasGenerateFn: true,
-            }),
-            MetaImageField({
-              relationTo: "media",
-            }),
-
+            MetaTitleField({ hasGenerateFn: true }),
+            MetaImageField({ relationTo: "media" }),
             MetaDescriptionField({}),
             PreviewField({
               hasGenerateFn: true,
@@ -160,6 +163,8 @@ export const Posts: CollectionConfig<"posts"> = {
         },
       ],
     },
+
+    // --- PUBLISHED AT (Geri eklendi) ---
     {
       name: "publishedAt",
       label: "Yayınlanma Tarihi",
@@ -169,6 +174,8 @@ export const Posts: CollectionConfig<"posts"> = {
           pickerAppearance: "dayAndTime",
         },
         position: "sidebar",
+        // Eğer editörlerin görmesini istemiyorsanız buraya 'hidden: true' ekleyebilirsiniz.
+        // Ama genellikle yayın tarihi editörler için önemlidir, o yüzden açık bıraktım.
       },
       hooks: {
         beforeChange: [
@@ -181,18 +188,33 @@ export const Posts: CollectionConfig<"posts"> = {
         ],
       },
     },
+
+    // --- AUTHORS (Gizli & Otomatik) ---
     {
       name: "authors",
       label: "Yazarlar",
       type: "relationship",
       relationTo: "users",
+      // hasMany: true, // Eğer birden fazla yazar olacaksa bunu açın
       required: true,
-      defaultValue: ({ user }: { user: any }) => user?.id,
       admin: {
         position: "sidebar",
-        readOnly: true,
+        hidden: true, // İsteğiniz üzerine gizlendi
+      },
+      hooks: {
+        beforeChange: [
+          ({ value, req, operation }) => {
+            // Oluşturulurken otomatik olarak mevcut kullanıcıyı ata
+            if (operation === "create" && req.user) {
+              return req.user.id;
+              // Eğer hasMany: true kullanırsanız: return [req.user.id];
+            }
+            return value;
+          },
+        ],
       },
     },
+
     {
       name: "relatedPosts",
       label: "İlgili Yazılar",
@@ -222,6 +244,7 @@ export const Posts: CollectionConfig<"posts"> = {
       admin: {
         disabled: true,
         readOnly: true,
+        hidden: true, // Genelde frontend için populate edilir, panelde gizlenebilir
       },
       fields: [
         {

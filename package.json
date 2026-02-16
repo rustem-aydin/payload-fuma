@@ -37,6 +37,7 @@
     "@next-safe-action/adapter-react-hook-form": "^2.0.0",
     "@payloadcms/admin-bar": "^3.76.1",
     "@payloadcms/db-postgres": "^3.76.1",
+    "@payloadcms/drizzle": "^3.76.1",
     "@payloadcms/live-preview-react": "^3.76.1",
     "@payloadcms/next": "^3.76.1",
     "@payloadcms/plugin-form-builder": "^3.76.1",

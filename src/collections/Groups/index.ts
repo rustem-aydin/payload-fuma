@@ -5,6 +5,7 @@ export const Groups: CollectionConfig = {
   slug: "groups",
   admin: {
     useAsTitle: "name",
+    hidden: ({ user }) => user?.roles !== "admin",
   },
   access: {
     read: () => true, // Herkes grupları görebilsin (isterseniz kısıtlayabilirsiniz)

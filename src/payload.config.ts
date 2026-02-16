@@ -42,7 +42,30 @@ export default buildConfig({
   i18n: {
     supportedLanguages: { tr },
   },
+  onInit: async (payload) => {
+    // 1. Mevcut kullanıcı var mı kontrol et
+    const existingUsers = await payload.find({
+      collection: "users",
+      limit: 1,
+    });
 
+    if (existingUsers.totalDocs === 0) {
+      await payload.create({
+        collection: "users",
+        data: {
+          email: "admin@admin.com",
+          password: "admin", // Geliştirme için basit şifre
+          name: "Süper Admin",
+          roles: "admin", // hasMany: false olduğu için string veriyoruz
+          // Admin olduğu için 'group' atamasına gerek yok (access.ts'de admin kontrolü var)
+        },
+      });
+
+      payload.logger.info(
+        "✅ Otomatik Admin oluşturuldu: admin@admin.com / admin",
+      );
+    }
+  },
   db: postgresAdapter({
     pool: {
       connectionString: process.env.DATABASE_URL || "",

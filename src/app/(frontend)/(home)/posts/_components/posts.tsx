@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import type { Post, Media } from "@/payload-types";
 
 interface PostsProps extends HTMLAttributes<HTMLDivElement> {
-  posts: Post[]; 
+  posts: Post[];
   sectionClassName?: string;
 }
 
@@ -34,6 +34,8 @@ export default function Posts({ posts, className, ...props }: PostsProps) {
       {posts.length > 0 ? (
         <div className="grid divide-y divide-dashed divide-border text-left">
           {posts.map((post, index) => {
+            const image = post.meta?.image;
+
             // Payload verilerini eşleştiriyoruz:
             const date = post.publishedAt
               ? new Date(post.publishedAt).toDateString()
@@ -42,12 +44,8 @@ export default function Posts({ posts, className, ...props }: PostsProps) {
             // Yazarı al (populatedAuthors içinden)
             const authorName = post.populatedAuthors?.[0]?.name || "Anonim";
 
-            // Resim URL'sini al (Payload Media objesinden)
             const imageUrl =
-              typeof post.meta?.image === "object"
-                ? (post.meta.image as Media).url
-                : null;
-
+              image && typeof image === "object" ? (image.url ?? null) : null;
             return (
               <ViewAnimation
                 delay={0.05 * index}

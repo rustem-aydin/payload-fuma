@@ -394,8 +394,8 @@ export interface FolderInterface {
  */
 export interface User {
   id: number;
-  name?: string | null;
-  roles?: ('admin' | 'editor' | 'user')[] | null;
+  name: string;
+  roles?: ('admin' | 'editor' | 'user') | null;
   group?: (number | null) | Group;
   updatedAt: string;
   createdAt: string;
