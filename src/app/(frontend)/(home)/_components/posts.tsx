@@ -4,31 +4,30 @@ import { Icons } from "@/components/icons/icons";
 import { Section } from "@/components/section";
 import { buttonVariants } from "@/components/ui/button";
 import { ViewAnimation } from "@/components/view-animation";
-import type { BlogPage } from "@/lib/source";
 
-export default function Posts({ posts }: { posts: BlogPage[] }) {
+export default function Posts({ posts }: { posts: any[] }) {
   return (
     <Section>
       <div className="grid divide-y divide-dashed divide-border/70 text-left dark:divide-border">
         {posts.map((post, index) => {
-          const date = new Date(post.data.date).toDateString();
+          const date = new Date(post.createdAt).toDateString();
           return (
             <ViewAnimation
               delay={0.05 * index}
               initial={{ opacity: 0, translateY: -6 }}
-              key={post.url}
+              key={post.id}
               whileInView={{ opacity: 1, translateY: 0 }}
             >
               <PostCard
-                author={post.data.author}
+                author={post.author}
                 date={date}
-                description={post.data.description ?? ""}
-                image={post.data.image}
+                description={post.description ?? ""}
+                image={post.image}
                 index={index}
                 slugs={post.slugs}
-                tags={post.data.tags}
-                title={post.data.title}
-                url={post.url}
+                tags={post.tags}
+                title={post.title}
+                url={`/posts/${post.slug}`} // Payload slug'ını URL'e çeviriyoruz
               />
             </ViewAnimation>
           );

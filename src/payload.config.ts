@@ -14,15 +14,30 @@ import { Users } from "./collections/Users";
 
 import { plugins } from "./plugins";
 import { defaultLexical } from "@/fields/defaultLexical";
-import { Pages } from "./collections/Pages";
-import { env } from "@/env"; // Kendi env dosyanı import et
+import { env } from "@/env";
 import { Groups } from "./collections/Groups";
+import { Questions } from "./collections/Questions";
+import { Tags } from "./collections/Tags";
+import { Answers } from "./collections/Answers";
+import { Comments } from "./collections/Comments";
+import { Notifications } from "./collections/Notifications";
+import { Reports } from "./collections/Reports";
+import { Docs } from "./collections/Docs";
 
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
 
 export default buildConfig({
   admin: {
+    autoLogin:
+      process.env.NODE_ENV === "development"
+        ? {
+            email: "admin@admin.com",
+            password: "admin",
+            prefillOnly: true,
+          }
+        : false,
+
     importMap: {
       baseDir: path.resolve(dirname),
     },
@@ -43,7 +58,6 @@ export default buildConfig({
     supportedLanguages: { tr },
   },
   onInit: async (payload) => {
-    // 1. Mevcut kullanıcı var mı kontrol et
     const existingUsers = await payload.find({
       collection: "users",
       limit: 1,
@@ -54,10 +68,9 @@ export default buildConfig({
         collection: "users",
         data: {
           email: "admin@admin.com",
-          password: "admin", // Geliştirme için basit şifre
+          password: "admin",
           name: "Süper Admin",
-          roles: "admin", // hasMany: false olduğu için string veriyoruz
-          // Admin olduğu için 'group' atamasına gerek yok (access.ts'de admin kontrolü var)
+          roles: "admin",
         },
       });
 
@@ -73,12 +86,18 @@ export default buildConfig({
   }),
 
   collections: [
-    Pages,
     Posts,
+    Docs,
     Media,
     Categories,
+    Tags,
     Users,
-    Groups, // <--- 2. BURAYA EKLEYİN
+    Answers,
+    Reports,
+    Groups,
+    Questions,
+    Comments,
+    Notifications,
   ],
   globals: [],
   cors: [process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:3000"].filter(

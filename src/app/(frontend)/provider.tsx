@@ -8,13 +8,14 @@ import Analytics from "@/components/analytics";
 import { TailwindIndicator } from "@/components/tailwind-indicator";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
+import { RootProvider } from "fumadocs-ui/provider/next";
+import { SmoothCursor } from "@/components/smooth-cursor";
 
 export function Provider({
   children,
 }: {
   children: ReactNode;
 }): React.ReactElement {
-
   return (
     <ThemeProvider
       attribute="class"
@@ -23,23 +24,23 @@ export function Provider({
       enableSystem
     >
       <NuqsAdapter>
-       
-          <ProgressProvider
-            color="var(--color-primary)"
-            delay={200}
-            height="2px"
-            options={{
-              showSpinner: false,
-            }}
-            shallowRouting
-            startOnLoad
-            stopDelay={200}
-          >
-            <TooltipProvider>{children}</TooltipProvider>
-          </ProgressProvider>
+        <ProgressProvider
+          color="var(--color-primary)"
+          delay={200}
+          height="2px"
+          options={{
+            showSpinner: false,
+          }}
+          shallowRouting
+          startOnLoad
+          stopDelay={200}
+        >
+          <TooltipProvider>{children}</TooltipProvider>
+        </ProgressProvider>
         <Analytics />
         <Toaster />
         <TailwindIndicator />
+        <SmoothCursor />
       </NuqsAdapter>
     </ThemeProvider>
   );

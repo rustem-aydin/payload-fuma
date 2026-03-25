@@ -1,39 +1,46 @@
-import type { Metadata } from 'next'
+import type { Metadata } from "next";
 
-import type { Media, Page, Post, Config } from '../payload-types'
+import type { Media, Post, Config } from "../payload-types";
 
-import { mergeOpenGraph } from './mergeOpenGraph'
-import { getServerSideURL } from './getURL'
+import { mergeOpenGraph } from "./mergeOpenGraph";
+import { getServerSideURL } from "./getURL";
 
-const getImageURL = (image?: Media | Config['db']['defaultIDType'] | null) => {
-  const serverUrl = getServerSideURL()
+const getImageURL = (image?: Media | Config["db"]["defaultIDType"] | null) => {
+  const serverUrl = getServerSideURL();
 
-  let url = serverUrl + '/website-template-OG.webp'
+  let url = serverUrl + "/website-template-OG.webp";
 
-  if (image && typeof image === 'object' && 'url' in image) {
-    const ogUrl = image.sizes?.og?.url
+  if (image && typeof image === "object" && "url" in image) {
+    const ogUrl = image.sizes?.og?.url;
 
-    url = ogUrl ? serverUrl + ogUrl : serverUrl + image.url
+    url = ogUrl ? serverUrl + ogUrl : serverUrl + image.url;
   }
 
-  return url
-}
+  return url;
+};
 
 export const generateMeta = async (args: {
-  doc: Partial<Page> | Partial<Post> | null
+  doc: Partial<Post> | null;
 }): Promise<Metadata> => {
-  const { doc } = args
+  const { doc } = args;
 
-  const ogImage = getImageURL(doc?.meta?.image)
+  // 1. RESİM: Önce meta.image'a bak, yoksa heroImage'a (Kapak resmi) bak
+  const ogImage = getImageURL(doc?.meta?.image) || getImageURL(doc?.heroImage);
 
-  const title = doc?.meta?.title
-    ? doc?.meta?.title + ' | Payload Website Template'
-    : 'Payload Website Template'
+  // 2. BAŞLIK: Önce meta.title'a bak, yoksa yazının kendi başlığını (doc.title) kullan
+  const postTitle = doc?.meta?.title || doc?.title;
+
+  const title = postTitle
+    ? postTitle + " | Payload Website Template" // "Sitenizin Adı" olarak değiştirebilirsiniz
+    : "Payload Website Template";
+
+  // 3. AÇIKLAMA: meta.description varsa kullan, yoksa boş bırak
+  const description = doc?.meta?.description || "";
 
   return {
-    description: doc?.meta?.description,
+    description,
     openGraph: mergeOpenGraph({
-      description: doc?.meta?.description || '',
+      description,
       images: ogImage
         ? [
             {
@@ -42,8 +49,13 @@ export const generateMeta = async (args: {
           ]
         : undefined,
       title,
-      url: Array.isArray(doc?.slug) ? doc?.slug.join('/') : '/',
+      // Eğer slug bir dizi (array) olarak gelirse birleştir, yoksa direkt kullan (veya /posts/ ekle)
+      url: doc?.slug
+        ? Array.isArray(doc.slug)
+          ? doc.slug.join("/")
+          : `/posts/${doc.slug}`
+        : "/",
     }),
     title,
-  }
-}
+  };
+};

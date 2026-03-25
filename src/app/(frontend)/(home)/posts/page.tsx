@@ -7,13 +7,13 @@ import configPromise from "@payload-config";
 import { NumberedPagination } from "@/components/numbered-pagination";
 import { Section } from "@/components/section";
 import { Wrapper } from "@/components/wrapper";
-import { postsPerPage } from "@/constants/config";
 import { createMetadata } from "@/lib/metadata";
 import { Hero } from "./_components/hero";
-import Posts from "./_components/posts";
-import { TagsAccordion, TagsSidebar } from "./_components/tags-sidebar";
+import { FilterAccordion } from "./_components/filter-accordion";
 
 import type { Post } from "@/payload-types";
+import { getCachedCategoriesWithCount } from "./tags/action";
+import Updates from "./_components/posts";
 
 export const dynamicParams = true;
 
@@ -25,6 +25,11 @@ export default async function Page(props: {
 
   const query =
     typeof searchParams.search === "string" ? searchParams.search : undefined;
+  const selectedCategories = Array.isArray(searchParams.categories)
+    ? searchParams.categories
+    : searchParams.categories
+      ? [searchParams.categories]
+      : [];
   const currentPage = searchParams.page
     ? Number.parseInt(searchParams.page as string, 10)
     : 1;
@@ -37,7 +42,7 @@ export default async function Page(props: {
     const searchResults = await payload.find({
       collection: "search",
       depth: 0,
-      limit: postsPerPage,
+      limit: 5,
       page: currentPage,
       where: {
         or: [
@@ -68,7 +73,7 @@ export default async function Page(props: {
     if (foundIds.length > 0) {
       const postsQuery = await payload.find({
         collection: "posts",
-        limit: postsPerPage,
+        limit: 5,
         pagination: false, // Sayfalamayı zaten searchResults ile yaptık
         where: {
           id: { in: foundIds }, // Bulunan ID'leri ver
@@ -76,8 +81,6 @@ export default async function Page(props: {
         },
       });
 
-      // Sıralamayı korumak istersek (Opsiyonel):
-      // Payload 'in' sorgusunda sıralamayı garanti etmez, searchResults sırasına göre dizebiliriz.
       fetchedPosts = postsQuery.docs as Post[];
     } else {
       fetchedPosts = [];
@@ -87,11 +90,14 @@ export default async function Page(props: {
   } else {
     const posts = await payload.find({
       collection: "posts",
-      limit: postsPerPage,
+      limit: 5,
       page: currentPage,
       sort: "-publishedAt",
       where: {
         _status: { equals: "published" },
+        ...(selectedCategories.length > 0 && {
+          "categories.slug": { in: selectedCategories },
+        }),
       },
     });
 
@@ -104,41 +110,22 @@ export default async function Page(props: {
     notFound();
   }
 
-  const categories = await payload.find({
-    collection: "categories",
-    limit: 100,
-  });
+  const categoryList = await getCachedCategoriesWithCount();
 
-  const tags = categories.docs.map((cat) => ({
-    name: cat.title,
-    count: 0,
-    slug: cat.slug,
-  }));
   return (
     <Wrapper>
       <Hero
-        endIndex={Math.min(currentPage * postsPerPage, totalDocs)}
-        startIndex={totalDocs > 0 ? (currentPage - 1) * postsPerPage + 1 : 0}
+        endIndex={Math.min(currentPage * 5, totalDocs)}
+        startIndex={totalDocs > 0 ? (currentPage - 1) * 5 + 1 : 0}
         totalPosts={totalDocs}
       />
-
       <Section className="h-full" sectionClassName="flex flex-1">
-        <div className="grid h-full lg:grid-cols-[1fr_280px]">
-          <div className="min-w-0 lg:border-border lg:border-r lg:border-dashed">
-            <div className="border-border border-b border-dashed px-4 py-2.5 lg:hidden">
-              <TagsAccordion tags={tags} />
-            </div>
-
-            <Posts
-              className="h-full border-none"
-              posts={fetchedPosts}
-              sectionClassName="flex flex-1"
-            />
+        <div className="min-w-0 lg:border-border lg:border-r lg:border-dashed">
+          <div className="border-border border-b border-dashed px-4 py-2.5 ">
+            <FilterAccordion categories={categoryList} />
           </div>
 
-          <aside className="hidden lg:block">
-            <TagsSidebar tags={tags} />
-          </aside>
+          <Updates posts={fetchedPosts} />
         </div>
       </Section>
 

@@ -1,0 +1,13 @@
+{
+  "$schema": "..\\..\\..\\.source\\json-schema\\docs.meta.json",
+  "title": "MA3",
+  "description": "Milli Açık Anahtar Altyapısı",
+  "icon": "Book",
+  "root": true,
+  "pages": [
+    "---Başlarken---",
+    "index",
+    "kurulum"
+ 
+  ]
+}

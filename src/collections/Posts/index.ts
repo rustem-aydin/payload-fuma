@@ -100,6 +100,25 @@ export const Posts: CollectionConfig = {
         ],
       },
     },
+    {
+      name: "tags",
+      type: "relationship",
+      label: "Etiketler",
+      relationTo: "tags",
+      hasMany: true,
+      admin: {
+        position: "sidebar",
+        description: "En fazla 5 etiket seçilebilir.",
+      },
+      // Max 5 tag kısıtı
+      validate: (value: unknown) => {
+        if (!value) return true;
+        if (Array.isArray(value) && value.length > 5) {
+          return "En fazla 5 etiket seçilebilir.";
+        }
+        return true;
+      },
+    },
 
     {
       name: "title",
@@ -164,7 +183,6 @@ export const Posts: CollectionConfig = {
       ],
     },
 
-    // --- PUBLISHED AT (Geri eklendi) ---
     {
       name: "publishedAt",
       label: "Yayınlanma Tarihi",

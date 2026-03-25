@@ -1,33 +1,37 @@
+import { defineCollections, frontmatterSchema } from "fumadocs-mdx/config";
+import jsonSchema from "fumadocs-mdx/plugins/json-schema";
+import lastModified from "fumadocs-mdx/plugins/last-modified";
+import { transformerTwoslash } from "fumadocs-twoslash";
+import { createFileSystemTypesCache } from "fumadocs-twoslash/cache-fs";
+import type { ElementContent } from "hast";
+import type { ShikiTransformer } from "shiki";
+import { z } from "zod";
+import { defineDocs, defineConfig } from "fumadocs-mdx/config";
 import {
-  defineCollections,
-  defineConfig,
-  frontmatterSchema,
-} from 'fumadocs-mdx/config'
-import jsonSchema from 'fumadocs-mdx/plugins/json-schema'
-import lastModified from 'fumadocs-mdx/plugins/last-modified'
-import { transformerTwoslash } from 'fumadocs-twoslash'
-import { createFileSystemTypesCache } from 'fumadocs-twoslash/cache-fs'
-import type { ElementContent } from 'hast'
-import type { ShikiTransformer } from 'shiki'
-import { z } from 'zod'
+  remarkFeedbackBlock,
+  type RemarkFeedbackBlockOptions,
+} from "fumadocs-core/mdx-plugins";
+const feedbackOptions: RemarkFeedbackBlockOptions = {
+  // other options:
+};
 
 export const blog = defineCollections({
-  type: 'doc',
-  dir: 'content',
+  type: "doc",
+  dir: "content/blog",
   schema: frontmatterSchema.extend({
     date: z
       .string()
       .or(z.date())
       .transform((value, context) => {
         try {
-          return new Date(value)
+          return new Date(value);
         } catch {
           context.issues.push({
-            code: 'custom',
-            message: 'The value could not be transformed to Date type.',
+            code: "custom",
+            message: "The value could not be transformed to Date type.",
             input: value,
-          })
-          return z.NEVER
+          });
+          return z.NEVER;
         }
       }),
     author: z.string(),
@@ -38,26 +42,26 @@ export const blog = defineCollections({
     includeProcessedMarkdown: true,
     extractLinkReferences: true,
   },
-})
+});
 
 function transformerEscape(): ShikiTransformer {
   return {
-    name: '@shikijs/transformers:remove-notation-escape',
+    name: "@shikijs/transformers:remove-notation-escape",
     code(hast) {
       function replace(node: ElementContent) {
-        if (node.type === 'text') {
-          node.value = node.value.replace('[\\!code', '[!code')
-        } else if ('children' in node) {
+        if (node.type === "text") {
+          node.value = node.value.replace("[\\!code", "[!code");
+        } else if ("children" in node) {
           for (const child of node.children) {
-            replace(child)
+            replace(child);
           }
         }
       }
 
-      replace(hast)
-      return hast
+      replace(hast);
+      return hast;
     },
-  }
+  };
 }
 
 export default defineConfig({
@@ -68,22 +72,20 @@ export default defineConfig({
     lastModified(),
   ],
   mdxOptions: async () => {
-    const { rehypeCodeDefaultOptions } = await import(
-      'fumadocs-core/mdx-plugins/rehype-code'
-    )
-    const { remarkSteps } = await import(
-      'fumadocs-core/mdx-plugins/remark-steps'
-    )
-    const { default: remarkMath } = await import('remark-math')
-    const { default: rehypeKatex } = await import('rehype-katex')
-    const { remarkAutoTypeTable } = await import('fumadocs-typescript')
+    const { rehypeCodeDefaultOptions } =
+      await import("fumadocs-core/mdx-plugins/rehype-code");
+    const { remarkSteps } =
+      await import("fumadocs-core/mdx-plugins/remark-steps");
+    const { default: remarkMath } = await import("remark-math");
+    const { default: rehypeKatex } = await import("rehype-katex");
+    const { remarkAutoTypeTable } = await import("fumadocs-typescript");
 
     return {
       rehypeCodeOptions: {
-        inline: 'tailing-curly-colon',
+        inline: "tailing-curly-colon",
         themes: {
-          light: 'catppuccin-latte',
-          dark: 'catppuccin-mocha',
+          light: "catppuccin-latte",
+          dark: "catppuccin-mocha",
         },
         transformers: [
           ...(rehypeCodeDefaultOptions.transformers ?? []),
@@ -98,11 +100,22 @@ export default defineConfig({
       },
       remarkNpmOptions: {
         persist: {
-          id: 'package-manager',
+          id: "package-manager",
         },
       },
-      remarkPlugins: [remarkSteps, remarkMath, remarkAutoTypeTable],
+      remarkPlugins: [
+        remarkSteps,
+        remarkMath,
+        remarkAutoTypeTable,
+        [remarkFeedbackBlock, feedbackOptions],
+      ],
       rehypePlugins: (v) => [rehypeKatex, ...v],
-    }
+    };
   },
-})
+});
+
+// source.config.ts (root'a, next.config.ts ile aynı seviyeye)
+
+export const docs = defineDocs({
+  dir: "content/docs",
+});

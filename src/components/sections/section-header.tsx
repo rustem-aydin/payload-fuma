@@ -1,16 +1,16 @@
-import type { ReactNode } from 'react'
-import { Balancer } from 'react-wrap-balancer'
-import { ViewAnimation } from '@/components/view-animation'
-import { cn } from '@/lib/utils'
+import type { ReactNode } from "react";
+import { Balancer } from "react-wrap-balancer";
+import { ViewAnimation } from "@/components/view-animation";
+import { cn } from "@/lib/utils";
 
 interface SectionHeaderProps {
-  title: string | ReactNode
-  description?: string | ReactNode | null
-  className?: string
-  titleClassName?: string
-  descriptionClassName?: string
-  align?: 'left' | 'center'
-  size?: 'default' | 'large'
+  title: string | ReactNode;
+  description?: string | ReactNode | null;
+  className?: string;
+  titleClassName?: string;
+  descriptionClassName?: string;
+  align?: "left" | "center";
+  size?: "default" | "large";
 }
 
 export const SectionHeader = ({
@@ -19,14 +19,14 @@ export const SectionHeader = ({
   className,
   titleClassName,
   descriptionClassName,
-  align = 'center',
-  size = 'default',
+  align = "center",
+  size = "default",
 }: SectionHeaderProps) => (
   <div
     className={cn(
-      'flex flex-col gap-4',
-      align === 'center' ? 'items-center text-center' : 'items-start text-left',
-      className
+      "flex flex-col gap-4",
+      align === "center" ? "items-center text-center" : "items-start text-left",
+      className,
     )}
   >
     <ViewAnimation
@@ -35,11 +35,11 @@ export const SectionHeader = ({
     >
       <h1
         className={cn(
-          'typography-title font-bold leading-tight tracking-tight',
-          size === 'large'
-            ? 'text-3xl sm:text-4xl md:text-5xl'
-            : 'text-2xl sm:text-3xl md:text-4xl',
-          titleClassName
+          "typography-title font-bold leading-tight tracking-tight",
+          size === "large"
+            ? "text-3xl sm:text-4xl md:text-5xl"
+            : "text-2xl sm:text-3xl md:text-4xl",
+          titleClassName,
         )}
       >
         <Balancer>{title}</Balancer>
@@ -53,14 +53,14 @@ export const SectionHeader = ({
       >
         <p
           className={cn(
-            'typography-body text-muted-foreground',
-            size === 'large' ? 'text-lg' : 'text-base',
-            descriptionClassName
+            "typography-body text-muted-foreground",
+            size === "large" ? "text-lg" : "text-base",
+            descriptionClassName,
           )}
         >
-          <Balancer>{description}</Balancer>
+          {description}
         </p>
       </ViewAnimation>
     )}
   </div>
-)
+);

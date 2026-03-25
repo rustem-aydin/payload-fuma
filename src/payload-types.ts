@@ -67,15 +67,18 @@ export interface Config {
   };
   blocks: {};
   collections: {
-    pages: Page;
     posts: Post;
+    docs: Doc;
     media: Media;
     categories: Category;
+    tags: Tag;
     users: User;
+    answers: Answer;
+    reports: Report;
     groups: Group;
-    redirects: Redirect;
-    forms: Form;
-    'form-submissions': FormSubmission;
+    questions: Question;
+    comments: Comment;
+    notifications: Notification;
     search: Search;
     'payload-kv': PayloadKv;
     'payload-jobs': PayloadJob;
@@ -90,15 +93,18 @@ export interface Config {
     };
   };
   collectionsSelect: {
-    pages: PagesSelect<false> | PagesSelect<true>;
     posts: PostsSelect<false> | PostsSelect<true>;
+    docs: DocsSelect<false> | DocsSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     categories: CategoriesSelect<false> | CategoriesSelect<true>;
+    tags: TagsSelect<false> | TagsSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
+    answers: AnswersSelect<false> | AnswersSelect<true>;
+    reports: ReportsSelect<false> | ReportsSelect<true>;
     groups: GroupsSelect<false> | GroupsSelect<true>;
-    redirects: RedirectsSelect<false> | RedirectsSelect<true>;
-    forms: FormsSelect<false> | FormsSelect<true>;
-    'form-submissions': FormSubmissionsSelect<false> | FormSubmissionsSelect<true>;
+    questions: QuestionsSelect<false> | QuestionsSelect<true>;
+    comments: CommentsSelect<false> | CommentsSelect<true>;
+    notifications: NotificationsSelect<false> | NotificationsSelect<true>;
     search: SearchSelect<false> | SearchSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-jobs': PayloadJobsSelect<false> | PayloadJobsSelect<true>;
@@ -114,6 +120,9 @@ export interface Config {
   globals: {};
   globalsSelect: {};
   locale: null;
+  widgets: {
+    collections: CollectionsWidget;
+  };
   user: User;
   jobs: {
     tasks: {
@@ -146,75 +155,15 @@ export interface UserAuthOperations {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "pages".
- */
-export interface Page {
-  id: number;
-  title: string;
-  hero: {
-    type: 'none' | 'highImpact' | 'mediumImpact' | 'lowImpact';
-    richText?: {
-      root: {
-        type: string;
-        children: {
-          type: any;
-          version: number;
-          [k: string]: unknown;
-        }[];
-        direction: ('ltr' | 'rtl') | null;
-        format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-        indent: number;
-        version: number;
-      };
-      [k: string]: unknown;
-    } | null;
-    links?:
-      | {
-          link: {
-            type?: ('reference' | 'custom') | null;
-            newTab?: boolean | null;
-            reference?: {
-              relationTo: 'posts';
-              value: number | Post;
-            } | null;
-            url?: string | null;
-            label: string;
-            /**
-             * Choose how the link should be rendered.
-             */
-            appearance?: ('default' | 'outline') | null;
-          };
-          id?: string | null;
-        }[]
-      | null;
-    media?: (number | null) | Media;
-  };
-  layout: (CallToActionBlock | ContentBlock | MediaBlock | ArchiveBlock | FormBlock)[];
-  meta?: {
-    title?: string | null;
-    /**
-     * Maximum upload file size: 12MB. Recommended file size for images is <500KB.
-     */
-    image?: (number | null) | Media;
-    description?: string | null;
-  };
-  publishedAt?: string | null;
-  /**
-   * When enabled, the slug will auto-generate from the title field on save and autosave.
-   */
-  generateSlug?: boolean | null;
-  slug: string;
-  updatedAt: string;
-  createdAt: string;
-  _status?: ('draft' | 'published') | null;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "posts".
  */
 export interface Post {
   id: number;
   group?: (number | null) | Group;
+  /**
+   * En fazla 5 etiket seçilebilir.
+   */
+  tags?: (number | Tag)[] | null;
   title: string;
   heroImage?: (number | null) | Media;
   content: {
@@ -268,6 +217,109 @@ export interface Group {
   name: string;
   updatedAt: string;
   createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "tags".
+ */
+export interface Tag {
+  id: number;
+  name: string;
+  /**
+   * Otomatik oluşturulur. URL'de kullanılır.
+   */
+  slug?: string | null;
+  /**
+   * Tag sayfasında gösterilecek kısa açıklama.
+   */
+  description?: string | null;
+  /**
+   * UI'da tag rozetinin rengi. Örn: #3B82F6
+   */
+  color?: string | null;
+  /**
+   * Kaç soruda kullanıldığı. Otomatik güncellenir.
+   */
+  usageCount?: number | null;
+  /**
+   * Kaç kullanıcının takip ettiği. Otomatik güncellenir.
+   */
+  followerCount?: number | null;
+  /**
+   * Bu tag'i takip eden kullanıcılar.
+   */
+  followers?: (number | User)[] | null;
+  seo?: {
+    /**
+     * Boş bırakılırsa tag adı kullanılır.
+     */
+    metaTitle?: string | null;
+    /**
+     * Boş bırakılırsa tag açıklaması kullanılır.
+     */
+    metaDescription?: string | null;
+  };
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "users".
+ */
+export interface User {
+  id: number;
+  name: string;
+  roles?: ('admin' | 'editor' | 'user') | null;
+  group?: (number | null) | Group;
+  /**
+   * Kendinizi kısaca tanıtın.
+   */
+  bio?: string | null;
+  avatar?: (number | null) | Media;
+  website?: string | null;
+  /**
+   * Otomatik hesaplanır, manuel değiştirmeyin.
+   */
+  reputation?: number | null;
+  badges?:
+    | {
+        badge?:
+          | (
+              | 'first_question'
+              | 'first_answer'
+              | 'active_asker'
+              | 'productive'
+              | 'endorsed'
+              | 'expert'
+              | 'popular_question'
+              | 'trusted'
+              | 'veteran'
+            )
+          | null;
+        earnedAt?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  questionCount?: number | null;
+  answerCount?: number | null;
+  updatedAt: string;
+  createdAt: string;
+  email: string;
+  resetPasswordToken?: string | null;
+  resetPasswordExpiration?: string | null;
+  salt?: string | null;
+  hash?: string | null;
+  loginAttempts?: number | null;
+  lockUntil?: string | null;
+  sessions?:
+    | {
+        id: string;
+        createdAt?: string | null;
+        expiresAt: string;
+      }[]
+    | null;
+  password?: string | null;
+  collection: 'users';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -390,34 +442,6 @@ export interface FolderInterface {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "users".
- */
-export interface User {
-  id: number;
-  name: string;
-  roles?: ('admin' | 'editor' | 'user') | null;
-  group?: (number | null) | Group;
-  updatedAt: string;
-  createdAt: string;
-  email: string;
-  resetPasswordToken?: string | null;
-  resetPasswordExpiration?: string | null;
-  salt?: string | null;
-  hash?: string | null;
-  loginAttempts?: number | null;
-  lockUntil?: string | null;
-  sessions?:
-    | {
-        id: string;
-        createdAt?: string | null;
-        expiresAt: string;
-      }[]
-    | null;
-  password?: string | null;
-  collection: 'users';
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "categories".
  */
 export interface Category {
@@ -442,284 +466,12 @@ export interface Category {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "CallToActionBlock".
+ * via the `definition` "docs".
  */
-export interface CallToActionBlock {
-  richText?: {
-    root: {
-      type: string;
-      children: {
-        type: any;
-        version: number;
-        [k: string]: unknown;
-      }[];
-      direction: ('ltr' | 'rtl') | null;
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-      indent: number;
-      version: number;
-    };
-    [k: string]: unknown;
-  } | null;
-  links?:
-    | {
-        link: {
-          type?: ('reference' | 'custom') | null;
-          newTab?: boolean | null;
-          reference?: {
-            relationTo: 'posts';
-            value: number | Post;
-          } | null;
-          url?: string | null;
-          label: string;
-          /**
-           * Choose how the link should be rendered.
-           */
-          appearance?: ('default' | 'outline') | null;
-        };
-        id?: string | null;
-      }[]
-    | null;
-  id?: string | null;
-  blockName?: string | null;
-  blockType: 'cta';
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "ContentBlock".
- */
-export interface ContentBlock {
-  columns?:
-    | {
-        size?: ('oneThird' | 'half' | 'twoThirds' | 'full') | null;
-        richText?: {
-          root: {
-            type: string;
-            children: {
-              type: any;
-              version: number;
-              [k: string]: unknown;
-            }[];
-            direction: ('ltr' | 'rtl') | null;
-            format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-            indent: number;
-            version: number;
-          };
-          [k: string]: unknown;
-        } | null;
-        enableLink?: boolean | null;
-        link?: {
-          type?: ('reference' | 'custom') | null;
-          newTab?: boolean | null;
-          reference?: {
-            relationTo: 'posts';
-            value: number | Post;
-          } | null;
-          url?: string | null;
-          label: string;
-          /**
-           * Choose how the link should be rendered.
-           */
-          appearance?: ('default' | 'outline') | null;
-        };
-        id?: string | null;
-      }[]
-    | null;
-  id?: string | null;
-  blockName?: string | null;
-  blockType: 'content';
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "MediaBlock".
- */
-export interface MediaBlock {
-  media: number | Media;
-  id?: string | null;
-  blockName?: string | null;
-  blockType: 'mediaBlock';
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "ArchiveBlock".
- */
-export interface ArchiveBlock {
-  introContent?: {
-    root: {
-      type: string;
-      children: {
-        type: any;
-        version: number;
-        [k: string]: unknown;
-      }[];
-      direction: ('ltr' | 'rtl') | null;
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-      indent: number;
-      version: number;
-    };
-    [k: string]: unknown;
-  } | null;
-  populateBy?: ('collection' | 'selection') | null;
-  relationTo?: 'posts' | null;
-  categories?: (number | Category)[] | null;
-  limit?: number | null;
-  selectedDocs?:
-    | {
-        relationTo: 'posts';
-        value: number | Post;
-      }[]
-    | null;
-  id?: string | null;
-  blockName?: string | null;
-  blockType: 'archive';
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "FormBlock".
- */
-export interface FormBlock {
-  form: number | Form;
-  enableIntro?: boolean | null;
-  introContent?: {
-    root: {
-      type: string;
-      children: {
-        type: any;
-        version: number;
-        [k: string]: unknown;
-      }[];
-      direction: ('ltr' | 'rtl') | null;
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-      indent: number;
-      version: number;
-    };
-    [k: string]: unknown;
-  } | null;
-  id?: string | null;
-  blockName?: string | null;
-  blockType: 'formBlock';
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "forms".
- */
-export interface Form {
+export interface Doc {
   id: number;
   title: string;
-  fields?:
-    | (
-        | {
-            name: string;
-            label?: string | null;
-            width?: number | null;
-            required?: boolean | null;
-            defaultValue?: boolean | null;
-            id?: string | null;
-            blockName?: string | null;
-            blockType: 'checkbox';
-          }
-        | {
-            name: string;
-            label?: string | null;
-            width?: number | null;
-            required?: boolean | null;
-            id?: string | null;
-            blockName?: string | null;
-            blockType: 'country';
-          }
-        | {
-            name: string;
-            label?: string | null;
-            width?: number | null;
-            required?: boolean | null;
-            id?: string | null;
-            blockName?: string | null;
-            blockType: 'email';
-          }
-        | {
-            message?: {
-              root: {
-                type: string;
-                children: {
-                  type: any;
-                  version: number;
-                  [k: string]: unknown;
-                }[];
-                direction: ('ltr' | 'rtl') | null;
-                format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-                indent: number;
-                version: number;
-              };
-              [k: string]: unknown;
-            } | null;
-            id?: string | null;
-            blockName?: string | null;
-            blockType: 'message';
-          }
-        | {
-            name: string;
-            label?: string | null;
-            width?: number | null;
-            defaultValue?: number | null;
-            required?: boolean | null;
-            id?: string | null;
-            blockName?: string | null;
-            blockType: 'number';
-          }
-        | {
-            name: string;
-            label?: string | null;
-            width?: number | null;
-            defaultValue?: string | null;
-            placeholder?: string | null;
-            options?:
-              | {
-                  label: string;
-                  value: string;
-                  id?: string | null;
-                }[]
-              | null;
-            required?: boolean | null;
-            id?: string | null;
-            blockName?: string | null;
-            blockType: 'select';
-          }
-        | {
-            name: string;
-            label?: string | null;
-            width?: number | null;
-            required?: boolean | null;
-            id?: string | null;
-            blockName?: string | null;
-            blockType: 'state';
-          }
-        | {
-            name: string;
-            label?: string | null;
-            width?: number | null;
-            defaultValue?: string | null;
-            required?: boolean | null;
-            id?: string | null;
-            blockName?: string | null;
-            blockType: 'text';
-          }
-        | {
-            name: string;
-            label?: string | null;
-            width?: number | null;
-            defaultValue?: string | null;
-            required?: boolean | null;
-            id?: string | null;
-            blockName?: string | null;
-            blockType: 'textarea';
-          }
-      )[]
-    | null;
-  submitButtonLabel?: string | null;
-  /**
-   * Choose whether to display an on-page message or redirect to a different page after they submit the form.
-   */
-  confirmationType?: ('message' | 'redirect') | null;
-  confirmationMessage?: {
+  description?: {
     root: {
       type: string;
       children: {
@@ -734,84 +486,241 @@ export interface Form {
     };
     [k: string]: unknown;
   } | null;
-  redirect?: {
-    url: string;
-  };
+  author: string;
+  category?: (number | Category)[] | null;
+  coverImage?: (number | null) | Media;
+  isbn?: string | null;
+  pageCount?: number | null;
+  publishedDate?: string | null;
   /**
-   * Send custom emails when the form submits. Use comma separated lists to send the same email to multiple recipients. To reference a value from this form, wrap that field's name with double curly brackets, i.e. {{firstName}}. You can use a wildcard {{*}} to output all data and {{*:table}} to format it as an HTML table in the email.
+   * Başlığa göre otomatik oluşur. Özel bir URL istiyorsanız manuel değiştirebilirsiniz.
    */
-  emails?:
-    | {
-        emailTo?: string | null;
-        cc?: string | null;
-        bcc?: string | null;
-        replyTo?: string | null;
-        emailFrom?: string | null;
-        subject: string;
-        /**
-         * Enter the message that should be sent in this email.
-         */
-        message?: {
-          root: {
-            type: string;
-            children: {
-              type: any;
-              version: number;
-              [k: string]: unknown;
-            }[];
-            direction: ('ltr' | 'rtl') | null;
-            format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-            indent: number;
-            version: number;
-          };
-          [k: string]: unknown;
-        } | null;
-        id?: string | null;
-      }[]
-    | null;
+  slug?: string | null;
+  language?: ('tr' | 'en') | null;
+  viewCount?: number | null;
+  commentCount?: number | null;
   updatedAt: string;
   createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "redirects".
+ * via the `definition` "answers".
  */
-export interface Redirect {
+export interface Answer {
   id: number;
+  question: number | Question;
+  author: number | User;
+  content: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  };
   /**
-   * You will need to rebuild the website when changing this field.
+   * Editor tarafından yazıldıysa otomatik işaretlenir.
    */
-  from: string;
-  to?: {
-    type?: ('reference' | 'custom') | null;
-    reference?:
-      | ({
-          relationTo: 'pages';
-          value: number | Page;
-        } | null)
-      | ({
-          relationTo: 'posts';
-          value: number | Post;
-        } | null);
-    url?: string | null;
+  isEditorial?: boolean | null;
+  /**
+   * En az 1 editor oyu aldıysa otomatik işaretlenir.
+   */
+  isEndorsed?: boolean | null;
+  /**
+   * 1. Görüş, 2. Görüş... Otomatik atanır. null = sıradan cevap.
+   */
+  viewOrder?: number | null;
+  /**
+   * Bu cevabı onaylayan editorlar. Otomatik güncellenir.
+   */
+  endorsements?:
+    | {
+        editor: number | User;
+        endorsedAt: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Kaç editor onayladı. Otomatik güncellenir.
+   */
+  endorseCount?: number | null;
+  /**
+   * Toplam upvote - downvote. Otomatik güncellenir.
+   */
+  voteScore?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "questions".
+ */
+export interface Question {
+  id: number;
+  title: string;
+  slug?: string | null;
+  category?: (number | null) | Category;
+  content?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  author?: (number | null) | User;
+  /**
+   * En fazla 5 etiket seçilebilir.
+   */
+  tags?: (number | Tag)[] | null;
+  /**
+   * Sorunun kimler tarafından görülebileceğini belirler.
+   */
+  visibility: 'public' | 'editors_only';
+  /**
+   * Sadece 'approved' sorular Google'a indexlenir.
+   */
+  status: 'published' | 'approved' | 'edited' | 'closed' | 'deleted';
+  /**
+   * Soru kapatılırsa sebep seçilmeli.
+   */
+  closedReason?: ('spam' | 'inappropriate' | 'duplicate' | 'insufficient' | 'off_topic') | null;
+  approvedBy?: (number | null) | User;
+  approvedAt?: string | null;
+  /**
+   * Soru sahibi tarafından kabul edilen cevap.
+   */
+  acceptedAnswer?: (number | null) | Answer;
+  /**
+   * Bu soru hangi sorunun tekrarı?
+   */
+  duplicateOf?: (number | null) | Question;
+  /**
+   * Toplam upvote - downvote. Otomatik güncellenir.
+   */
+  voteScore?: number | null;
+  /**
+   * Otomatik güncellenir.
+   */
+  answerCount?: number | null;
+  /**
+   * Sayfa her açıldığında +1 artar.
+   */
+  viewCount?: number | null;
+  /**
+   * Editor onaylı cevap sayısı. Otomatik güncellenir.
+   */
+  endorsedAnswerCount?: number | null;
+  seo?: {
+    /**
+     * Boş bırakılırsa soru başlığı kullanılır.
+     */
+    metaTitle?: string | null;
+    metaDescription?: string | null;
+    /**
+     * Onaylı sorular için manuel noindex gerekiyorsa işaretle.
+     */
+    noindex?: boolean | null;
   };
   updatedAt: string;
   createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "form-submissions".
+ * via the `definition` "reports".
  */
-export interface FormSubmission {
+export interface Report {
   id: number;
-  form: number | Form;
-  submissionData?:
-    | {
-        field: string;
-        value: string;
-        id?: string | null;
-      }[]
-    | null;
+  reporter: number | User;
+  targetType: 'question' | 'answer' | 'comment';
+  question?: (number | null) | Question;
+  answer?: (number | null) | Answer;
+  comment?: (number | null) | Comment;
+  reason: 'spam' | 'inappropriate' | 'duplicate' | 'insufficient' | 'off_topic' | 'misinformation';
+  /**
+   * Şikayetinizi detaylandırın (opsiyonel).
+   */
+  description?: string | null;
+  status: 'pending' | 'accepted' | 'dismissed';
+  reviewedBy?: (number | null) | User;
+  reviewedAt?: string | null;
+  /**
+   * İnceleme sonucu hakkında not (sadece editörler görür).
+   */
+  reviewNote?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "comments".
+ */
+export interface Comment {
+  id: number;
+  author: number | User;
+  targetType: 'question' | 'answer';
+  question?: (number | null) | Question;
+  answer?: (number | null) | Answer;
+  /**
+   * Maksimum 600 karakter.
+   */
+  content: string;
+  /**
+   * Yorumda @mention edilen kullanıcılar. Otomatik dolar.
+   */
+  mentions?: (number | User)[] | null;
+  /**
+   * Bu yorumu beğenen kullanıcılar.
+   */
+  upvotes?: (number | User)[] | null;
+  upvoteCount?: number | null;
+  /**
+   * Editor tarafından gizlenen yorumlar frontend'de gösterilmez.
+   */
+  isHidden?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "notifications".
+ */
+export interface Notification {
+  id: number;
+  user: number | User;
+  type:
+    | 'answer'
+    | 'comment'
+    | 'mention'
+    | 'endorsed'
+    | 'accepted'
+    | 'upvote'
+    | 'downvote'
+    | 'question_closed'
+    | 'badge'
+    | 'tag_question';
+  message: string;
+  relatedQuestion?: (number | null) | Question;
+  relatedAnswer?: (number | null) | Answer;
+  relatedComment?: (number | null) | Comment;
+  relatedTag?: (number | null) | Tag;
+  relatedBadge?: string | null;
+  isRead?: boolean | null;
+  readAt?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -963,12 +872,12 @@ export interface PayloadLockedDocument {
   id: number;
   document?:
     | ({
-        relationTo: 'pages';
-        value: number | Page;
-      } | null)
-    | ({
         relationTo: 'posts';
         value: number | Post;
+      } | null)
+    | ({
+        relationTo: 'docs';
+        value: number | Doc;
       } | null)
     | ({
         relationTo: 'media';
@@ -979,24 +888,36 @@ export interface PayloadLockedDocument {
         value: number | Category;
       } | null)
     | ({
+        relationTo: 'tags';
+        value: number | Tag;
+      } | null)
+    | ({
         relationTo: 'users';
         value: number | User;
+      } | null)
+    | ({
+        relationTo: 'answers';
+        value: number | Answer;
+      } | null)
+    | ({
+        relationTo: 'reports';
+        value: number | Report;
       } | null)
     | ({
         relationTo: 'groups';
         value: number | Group;
       } | null)
     | ({
-        relationTo: 'redirects';
-        value: number | Redirect;
+        relationTo: 'questions';
+        value: number | Question;
       } | null)
     | ({
-        relationTo: 'forms';
-        value: number | Form;
+        relationTo: 'comments';
+        value: number | Comment;
       } | null)
     | ({
-        relationTo: 'form-submissions';
-        value: number | FormSubmission;
+        relationTo: 'notifications';
+        value: number | Notification;
       } | null)
     | ({
         relationTo: 'search';
@@ -1050,145 +971,11 @@ export interface PayloadMigration {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "pages_select".
- */
-export interface PagesSelect<T extends boolean = true> {
-  title?: T;
-  hero?:
-    | T
-    | {
-        type?: T;
-        richText?: T;
-        links?:
-          | T
-          | {
-              link?:
-                | T
-                | {
-                    type?: T;
-                    newTab?: T;
-                    reference?: T;
-                    url?: T;
-                    label?: T;
-                    appearance?: T;
-                  };
-              id?: T;
-            };
-        media?: T;
-      };
-  layout?:
-    | T
-    | {
-        cta?: T | CallToActionBlockSelect<T>;
-        content?: T | ContentBlockSelect<T>;
-        mediaBlock?: T | MediaBlockSelect<T>;
-        archive?: T | ArchiveBlockSelect<T>;
-        formBlock?: T | FormBlockSelect<T>;
-      };
-  meta?:
-    | T
-    | {
-        title?: T;
-        image?: T;
-        description?: T;
-      };
-  publishedAt?: T;
-  generateSlug?: T;
-  slug?: T;
-  updatedAt?: T;
-  createdAt?: T;
-  _status?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "CallToActionBlock_select".
- */
-export interface CallToActionBlockSelect<T extends boolean = true> {
-  richText?: T;
-  links?:
-    | T
-    | {
-        link?:
-          | T
-          | {
-              type?: T;
-              newTab?: T;
-              reference?: T;
-              url?: T;
-              label?: T;
-              appearance?: T;
-            };
-        id?: T;
-      };
-  id?: T;
-  blockName?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "ContentBlock_select".
- */
-export interface ContentBlockSelect<T extends boolean = true> {
-  columns?:
-    | T
-    | {
-        size?: T;
-        richText?: T;
-        enableLink?: T;
-        link?:
-          | T
-          | {
-              type?: T;
-              newTab?: T;
-              reference?: T;
-              url?: T;
-              label?: T;
-              appearance?: T;
-            };
-        id?: T;
-      };
-  id?: T;
-  blockName?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "MediaBlock_select".
- */
-export interface MediaBlockSelect<T extends boolean = true> {
-  media?: T;
-  id?: T;
-  blockName?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "ArchiveBlock_select".
- */
-export interface ArchiveBlockSelect<T extends boolean = true> {
-  introContent?: T;
-  populateBy?: T;
-  relationTo?: T;
-  categories?: T;
-  limit?: T;
-  selectedDocs?: T;
-  id?: T;
-  blockName?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "FormBlock_select".
- */
-export interface FormBlockSelect<T extends boolean = true> {
-  form?: T;
-  enableIntro?: T;
-  introContent?: T;
-  id?: T;
-  blockName?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "posts_select".
  */
 export interface PostsSelect<T extends boolean = true> {
   group?: T;
+  tags?: T;
   title?: T;
   heroImage?: T;
   content?: T;
@@ -1214,6 +1001,26 @@ export interface PostsSelect<T extends boolean = true> {
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "docs_select".
+ */
+export interface DocsSelect<T extends boolean = true> {
+  title?: T;
+  description?: T;
+  author?: T;
+  category?: T;
+  coverImage?: T;
+  isbn?: T;
+  pageCount?: T;
+  publishedDate?: T;
+  slug?: T;
+  language?: T;
+  viewCount?: T;
+  commentCount?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1331,12 +1138,46 @@ export interface CategoriesSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "tags_select".
+ */
+export interface TagsSelect<T extends boolean = true> {
+  name?: T;
+  slug?: T;
+  description?: T;
+  color?: T;
+  usageCount?: T;
+  followerCount?: T;
+  followers?: T;
+  seo?:
+    | T
+    | {
+        metaTitle?: T;
+        metaDescription?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "users_select".
  */
 export interface UsersSelect<T extends boolean = true> {
   name?: T;
   roles?: T;
   group?: T;
+  bio?: T;
+  avatar?: T;
+  website?: T;
+  reputation?: T;
+  badges?:
+    | T
+    | {
+        badge?: T;
+        earnedAt?: T;
+        id?: T;
+      };
+  questionCount?: T;
+  answerCount?: T;
   updatedAt?: T;
   createdAt?: T;
   email?: T;
@@ -1356,6 +1197,48 @@ export interface UsersSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "answers_select".
+ */
+export interface AnswersSelect<T extends boolean = true> {
+  question?: T;
+  author?: T;
+  content?: T;
+  isEditorial?: T;
+  isEndorsed?: T;
+  viewOrder?: T;
+  endorsements?:
+    | T
+    | {
+        editor?: T;
+        endorsedAt?: T;
+        id?: T;
+      };
+  endorseCount?: T;
+  voteScore?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "reports_select".
+ */
+export interface ReportsSelect<T extends boolean = true> {
+  reporter?: T;
+  targetType?: T;
+  question?: T;
+  answer?: T;
+  comment?: T;
+  reason?: T;
+  description?: T;
+  status?: T;
+  reviewedBy?: T;
+  reviewedAt?: T;
+  reviewNote?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "groups_select".
  */
 export interface GroupsSelect<T extends boolean = true> {
@@ -1365,166 +1248,68 @@ export interface GroupsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "redirects_select".
+ * via the `definition` "questions_select".
  */
-export interface RedirectsSelect<T extends boolean = true> {
-  from?: T;
-  to?:
-    | T
-    | {
-        type?: T;
-        reference?: T;
-        url?: T;
-      };
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "forms_select".
- */
-export interface FormsSelect<T extends boolean = true> {
+export interface QuestionsSelect<T extends boolean = true> {
   title?: T;
-  fields?:
+  slug?: T;
+  category?: T;
+  content?: T;
+  author?: T;
+  tags?: T;
+  visibility?: T;
+  status?: T;
+  closedReason?: T;
+  approvedBy?: T;
+  approvedAt?: T;
+  acceptedAnswer?: T;
+  duplicateOf?: T;
+  voteScore?: T;
+  answerCount?: T;
+  viewCount?: T;
+  endorsedAnswerCount?: T;
+  seo?:
     | T
     | {
-        checkbox?:
-          | T
-          | {
-              name?: T;
-              label?: T;
-              width?: T;
-              required?: T;
-              defaultValue?: T;
-              id?: T;
-              blockName?: T;
-            };
-        country?:
-          | T
-          | {
-              name?: T;
-              label?: T;
-              width?: T;
-              required?: T;
-              id?: T;
-              blockName?: T;
-            };
-        email?:
-          | T
-          | {
-              name?: T;
-              label?: T;
-              width?: T;
-              required?: T;
-              id?: T;
-              blockName?: T;
-            };
-        message?:
-          | T
-          | {
-              message?: T;
-              id?: T;
-              blockName?: T;
-            };
-        number?:
-          | T
-          | {
-              name?: T;
-              label?: T;
-              width?: T;
-              defaultValue?: T;
-              required?: T;
-              id?: T;
-              blockName?: T;
-            };
-        select?:
-          | T
-          | {
-              name?: T;
-              label?: T;
-              width?: T;
-              defaultValue?: T;
-              placeholder?: T;
-              options?:
-                | T
-                | {
-                    label?: T;
-                    value?: T;
-                    id?: T;
-                  };
-              required?: T;
-              id?: T;
-              blockName?: T;
-            };
-        state?:
-          | T
-          | {
-              name?: T;
-              label?: T;
-              width?: T;
-              required?: T;
-              id?: T;
-              blockName?: T;
-            };
-        text?:
-          | T
-          | {
-              name?: T;
-              label?: T;
-              width?: T;
-              defaultValue?: T;
-              required?: T;
-              id?: T;
-              blockName?: T;
-            };
-        textarea?:
-          | T
-          | {
-              name?: T;
-              label?: T;
-              width?: T;
-              defaultValue?: T;
-              required?: T;
-              id?: T;
-              blockName?: T;
-            };
-      };
-  submitButtonLabel?: T;
-  confirmationType?: T;
-  confirmationMessage?: T;
-  redirect?:
-    | T
-    | {
-        url?: T;
-      };
-  emails?:
-    | T
-    | {
-        emailTo?: T;
-        cc?: T;
-        bcc?: T;
-        replyTo?: T;
-        emailFrom?: T;
-        subject?: T;
-        message?: T;
-        id?: T;
+        metaTitle?: T;
+        metaDescription?: T;
+        noindex?: T;
       };
   updatedAt?: T;
   createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "form-submissions_select".
+ * via the `definition` "comments_select".
  */
-export interface FormSubmissionsSelect<T extends boolean = true> {
-  form?: T;
-  submissionData?:
-    | T
-    | {
-        field?: T;
-        value?: T;
-        id?: T;
-      };
+export interface CommentsSelect<T extends boolean = true> {
+  author?: T;
+  targetType?: T;
+  question?: T;
+  answer?: T;
+  content?: T;
+  mentions?: T;
+  upvotes?: T;
+  upvoteCount?: T;
+  isHidden?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "notifications_select".
+ */
+export interface NotificationsSelect<T extends boolean = true> {
+  user?: T;
+  type?: T;
+  message?: T;
+  relatedQuestion?: T;
+  relatedAnswer?: T;
+  relatedComment?: T;
+  relatedTag?: T;
+  relatedBadge?: T;
+  isRead?: T;
+  readAt?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -1640,21 +1425,26 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "collections_widget".
+ */
+export interface CollectionsWidget {
+  data?: {
+    [k: string]: unknown;
+  };
+  width: 'full';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "TaskSchedulePublish".
  */
 export interface TaskSchedulePublish {
   input: {
     type?: ('publish' | 'unpublish') | null;
     locale?: string | null;
-    doc?:
-      | ({
-          relationTo: 'pages';
-          value: number | Page;
-        } | null)
-      | ({
-          relationTo: 'posts';
-          value: number | Post;
-        } | null);
+    doc?: {
+      relationTo: 'posts';
+      value: number | Post;
+    } | null;
     global?: string | null;
     user?: (number | null) | User;
   };
@@ -1721,6 +1511,16 @@ export interface CodeBlock {
   id?: string | null;
   blockName?: string | null;
   blockType: 'code';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "MediaBlock".
+ */
+export interface MediaBlock {
+  media: number | Media;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'mediaBlock';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

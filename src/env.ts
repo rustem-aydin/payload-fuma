@@ -14,16 +14,7 @@ export const env = createEnv({
     PREVIEW_SECRET: z.string().min(1),
     PAYLOAD_SECRET: z.string().min(1),
 
-    RESEND_API_KEY: z.string().min(1).startsWith("re_"),
-    RESEND_AUDIENCE_ID: z.string().min(1),
-    EMAIL_FROM: z.email(),
-    EMAIL_TO: z.email(),
     // Authentication
-    BETTER_AUTH_SECRET:
-      process.env.NODE_ENV === "production"
-        ? z.string().min(1)
-        : z.string().min(1).optional(),
-    BETTER_AUTH_URL: z.string().min(1).optional(),
     // BotID
     BOTID_DEV_BYPASS: z.enum(["BAD-BOT", "GOOD-BOT", "HUMAN"]).optional(),
     // Google
@@ -33,7 +24,7 @@ export const env = createEnv({
 
   client: {
     // App
-        NEXT_PUBLIC_SERVER_URL: z.string().min(1),
+    NEXT_PUBLIC_SERVER_URL: z.string().min(1),
 
     NEXT_PUBLIC_BASE_URL: z.url().min(1).optional(),
     // Analytics

@@ -1,82 +1,28 @@
-import type { HTMLAttributes } from "react";
-import { PostCard } from "@/components/blog/post-card";
-import { SearchRedirectInput } from "@/components/search-redirect-input";
 import { Section } from "@/components/section";
 import { ViewAnimation } from "@/components/view-animation";
-import { cn } from "@/lib/utils";
-import type { Post, Media } from "@/payload-types";
+import type { Post } from "@/payload-types";
+import { PostCard } from "./post-card";
 
-interface PostsProps extends HTMLAttributes<HTMLDivElement> {
-  posts: Post[];
-  sectionClassName?: string;
-}
-
-export default function Posts({ posts, className, ...props }: PostsProps) {
+const Updates = ({ posts }: { posts: Post[] }) => {
   return (
-    <Section
-      {...props}
-      className={cn(
-        "flex flex-col divide-y divide-dashed divide-border",
-        className,
-      )}
-    >
-      <ViewAnimation
-        delay={0.05}
-        initial={{ opacity: 0, translateY: -6 }}
-        whileInView={{ opacity: 1, translateY: 0 }}
-      >
-        <SearchRedirectInput
-          className="min-w-full"
-          placeholder="Yazılarda ara..."
-        />
-      </ViewAnimation>
-
-      {posts.length > 0 ? (
-        <div className="grid divide-y divide-dashed divide-border text-left">
-          {posts.map((post, index) => {
-            const image = post.meta?.image;
-
-            // Payload verilerini eşleştiriyoruz:
-            const date = post.publishedAt
-              ? new Date(post.publishedAt).toDateString()
-              : new Date(post.createdAt).toDateString();
-
-            // Yazarı al (populatedAuthors içinden)
-            const authorName = post.populatedAuthors?.[0]?.name || "Anonim";
-
-            const imageUrl =
-              image && typeof image === "object" ? (image.url ?? null) : null;
-            return (
+    <Section className="relative w-full">
+      <div className="w-full border-t border-dashed border-border">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 divide-x divide-y divide-dashed divide-border">
+          {posts.map((post, index) => (
+            <div className="min-h-full" key={post.slug}>
               <ViewAnimation
                 delay={0.05 * index}
                 initial={{ opacity: 0, translateY: -6 }}
-                key={post.id} // Payload her zaman 'id' verir
                 whileInView={{ opacity: 1, translateY: 0 }}
               >
-                <PostCard
-                  author={authorName}
-                  date={date}
-                  description={post.meta?.description || ""}
-                  image={imageUrl}
-                  index={index}
-                  slugs={[post.slug || ""]} // PostCard array beklediği için [slug] yapıyoruz
-                  tags={
-                    post.categories?.map((cat) =>
-                      typeof cat === "object" ? cat.title : "",
-                    ) as string[]
-                  }
-                  title={post.title}
-                  url={`/posts/${post.slug}`} // Payload slug'ını URL'e çeviriyoruz
-                />
+                <PostCard post={post} />
               </ViewAnimation>
-            );
-          })}
+            </div>
+          ))}
         </div>
-      ) : (
-        <div className="p-12 text-center text-muted-foreground">
-          Henüz hiç yazı yok.
-        </div>
-      )}
+      </div>
     </Section>
   );
-}
+};
+
+export default Updates;

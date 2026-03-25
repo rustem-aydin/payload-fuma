@@ -1,0 +1,87 @@
+---
+title: İLADAS Nedir?
+description: İletişim Ağları Arası Dosya Aktarma Sistemi
+icon: Play
+---
+
+### İLADAS BİLGİLENDİRME DOKÜMANI
+
+#### 1. Uygulama Ortamları
+
+Uygulama her üç ortamda da (TSK Ağı, İnternet Ağı, NATO Ağı) web tabanlı olarak çalışacaktır.
+
+#### 2. Kullanıcı Dostu Arayüz
+
+Uygulama, kullanıcı dostu arayüz kriterleri göz önüne alınarak geliştirilmiştir. Bu kriterler arasında:
+
+- Tam ekran
+- Anlaşılır yazı tipleri
+- Görseller
+- Raporlar
+  vb. bulunur.
+
+#### 3. Veri Kaçağı Önleme Sistemi
+
+Uygulama, Sanal Hava Boşluğu (SAHAB) sistemi devreye alınıncaya kadar veri kaçağı önleme sistemi aracılığıyla, entegrasyon sağlandığı taktirde (HvBS ve internet ortamı arasında) aktarılacak olan verilerin özel bir formata dönüştürülüp SAHAB sistemi üzerinden aktarımı kontrollü olarak sağlanacaktır.
+
+#### 4. Antivirüs Uyumluluğu
+
+İLADAS, her antivirüs programıyla uyumlu çalışabilecek şekilde tasarlanacaktır.
+
+#### 5. Kullanıcı Girişi
+
+Kullanıcılar programa Windows kullanıcı/şifre ile giriş yapabilecektir.
+
+#### 6. Rol Yönetimi
+
+- Bir kullanıcıya birden fazla rol verilmesi engellenecektir.
+- İLADAS’a erişim ve veri aktarımı işlemleri için yönetim ve transfer onay mekanizması oluşturulmuştur.
+- Rol bazlı yetkilendirme işlemleri KY ile kullanıcı entegrasyonu sağlandıktan sonra gerçekleştirilecektir.
+
+##### 6.1. Sistemler Arası Transfer
+
+Sistemler arası transfer işlemleri için altı farklı transfer makamı tanımlanmıştır:
+
+1. **Standart Kullanıcı**
+2. **Sicil Amiri Onayı**
+3. **Siber Svn.K.lığı Onay Makamı**
+4. **İKK Onay Makamı**
+5. **Bilgi Sis.K.lığı Onay Makamı**
+6. **Transfer Taşıma**
+
+Onay Makamları sistem yöneticileri tarafından değiştirilebilecektir.
+
+#### 7. Kayıt ve Raporlama
+
+- Kayıtlar aracılığıyla işlemleri kimin yaptığına dair detaylı bilgiler her iki ortamın veritabanlarında oluşturulmuştur.
+- Yetkilendirme işlemleri ve gerçekleştirilen aktarım işlemleri için sistem raporları oluşturacaktır.
+
+#### 8. Bilgilendirme Pencereleri
+
+- Kullanıcılar dosya aktarımı yaparken bilgilendirme penceresi açılarak onaylama kutucuğu oluşturulmuştur.
+- Kullanıcılara bu verilerin sorumluluğunu aldıklarına dair bir imza kutucuğu eklenmiş olup ve kaydı tutulmaktadır.
+- Kullanıcılara yapacakları işlemlerde bilgilendirme pencereleri oluşturulmuştur.
+
+#### 9. Güvenlik
+
+Ağlar arası aktarım yapılan verilerin kopyası bir yıl süreyle güvenlik nedeniyle her iki ortam veritabanında sadece sistem yöneticilerinin erişebileceği bir ortamda saklanacak şekilde tasarlanacaktır.
+
+#### 10. Antivirüs Taraması
+
+Ağlar arası aktarım yapılmadan önce antivirüs taraması yapılacaktır. Aktarım yapılacak uzantıdaki dosyalar aktarım yapılmadan önce taranacak, tarama işlemi gerçekleştirilmediği takdirde aktarım işlemi gerçekleştirilmeyecek şekilde tasarlanacaktır.
+
+#### 11. Zincirleme Sıkıştırma
+
+Zincirleme sıkıştırılan (iç içe zipli dosyalar) dosyaların aktarımına izin verilmeyecek şekilde tasarlanacaktır.
+
+#### 12. Dosya Tipleri
+
+Aktarılacak olan dosya tipleri sınırlandırılmış ve sadece sistem yöneticisi rolü tarafından ekleme ve çıkarma işlemlerine izin verilmiştir. Dosya tipleri uzantıya bakılarak değil Magic Byte verisine bakılarak karar verilmiştir.
+
+- **Belge Uzantıları**: doc, docx, xls, xlsx, pdf
+- **Fotoğraf Uzantıları**: jpg, jpeg, bmp, png
+- **Ses Uzantıları**: mp3
+- **Video Uzantıları**: mp4, avi, mpeg
+- **Uygulama Uzantıları**: exe
+- **Sıkıştırma Dosya Uzantıları**: rar, zip, 7z
+- **Sunum Dosya uzantıları**: ppt, pptx

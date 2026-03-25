@@ -6,18 +6,13 @@ export const Users: CollectionConfig = {
   auth: true,
   admin: {
     hidden: ({ user }) => user?.roles !== "admin",
-
     useAsTitle: "name",
-    defaultColumns: ["name", "email", "roles", "group"],
-    // Editörler sadece Posts ve Users görebilir demiştiniz.
-    // Users'ı görebilmeli ki kullanıcı ekleyebilsinler.
+    defaultColumns: ["name", "email", "roles", "group", "reputation"],
   },
   access: {
     read: isAdminOrGroupEditor,
-    // Admin veya Editör yeni kullanıcı ekleyebilir
     create: ({ req: { user } }) => {
       if (!user) return false;
-      // checkRole fonksiyonunu burada tekrar inline yazabilir veya import edebilirsiniz
       const role = user.roles as string;
       return role === "admin" || role === "editor";
     },
@@ -33,16 +28,14 @@ export const Users: CollectionConfig = {
     {
       name: "roles",
       type: "select",
-      hasMany: false, // İSTEK 1: Her kullanıcıya tek rol
+      hasMany: false,
       saveToJWT: true,
       defaultValue: "user",
       required: true,
       access: {
-        // Sadece Admin bu alanı UI üzerinden değiştirebilir
         update: isFieldAdmin,
         create: isFieldAdmin,
       },
-      // İSTEK 3: Editörler rolleri göremez
       admin: {
         condition: (_data, _siblingData, { user }) => {
           return user?.roles === "admin";
@@ -58,7 +51,6 @@ export const Users: CollectionConfig = {
       name: "group",
       type: "relationship",
       relationTo: "groups",
-      // İSTEK 3: Editörler grubu göremez
       admin: {
         position: "sidebar",
         condition: (_data, _siblingData, { user }) => {
@@ -66,31 +58,139 @@ export const Users: CollectionConfig = {
         },
       },
       access: {
-        update: isFieldAdmin, // Grubu sadece admin değiştirebilir
+        update: isFieldAdmin,
       },
     },
+
+    // ─── PROFİL ──────────────────────────────────────────────
+    {
+      name: "bio",
+      type: "textarea",
+      label: "Hakkımda",
+      admin: {
+        description: "Kendinizi kısaca tanıtın.",
+      },
+    },
+    {
+      name: "avatar",
+      type: "upload",
+      label: "Profil Fotoğrafı",
+      relationTo: "media",
+    },
+    {
+      name: "website",
+      type: "text",
+      label: "Web Sitesi",
+    },
+
+    // ─── REPUTATION ──────────────────────────────────────────
+    // Kullanıcının toplam puanı.
+    // Her oy/onay işleminde hook ile güncellenir, elle değiştirilemez.
+    {
+      name: "reputation",
+      type: "number",
+      label: "Reputation",
+      defaultValue: 0,
+      admin: {
+        position: "sidebar",
+        description: "Otomatik hesaplanır, manuel değiştirmeyin.",
+        readOnly: true,
+        condition: (_data, _siblingData, { user }) => {
+          return user?.roles === "admin";
+        },
+      },
+      access: {
+        // Hiçbir kullanıcı bu alanı doğrudan değiştiremez.
+        // Sadece sistem (hook) değiştirir.
+        update: isFieldAdmin,
+        create: isFieldAdmin,
+      },
+    },
+
+    // ─── BADGES ──────────────────────────────────────────────
+    // Kullanıcının kazandığı rozetler.
+    // Sistem tarafından otomatik eklenir.
+    {
+      name: "badges",
+      type: "array",
+      label: "Rozetler",
+      admin: {
+        readOnly: true,
+        condition: (_data, _siblingData, { user }) => {
+          return user?.roles === "admin";
+        },
+      },
+      access: {
+        update: isFieldAdmin,
+        create: isFieldAdmin,
+      },
+      fields: [
+        {
+          name: "badge",
+          type: "select",
+          label: "Rozet",
+          options: [
+            // Aktivite rozetleri
+            { label: "İlk Adım — İlk soruyu sordu", value: "first_question" },
+            { label: "Katkıcı — İlk cevabı yazdı", value: "first_answer" },
+            { label: "Aktif Üye — 10 soru sordu", value: "active_asker" },
+            { label: "Üretken — 10 cevap yazdı", value: "productive" },
+            // Kalite rozetleri
+            {
+              label: "Beğenilen — Cevabı editör onayı aldı",
+              value: "endorsed",
+            },
+            { label: "Uzman — 5 farklı editör onayı aldı", value: "expert" },
+            {
+              label: "Popüler Soru — 100+ görüntülenme",
+              value: "popular_question",
+            },
+            // Topluluk rozetleri
+            { label: "Güvenilir — 100 reputation", value: "trusted" },
+            { label: "Veteran — 500 reputation", value: "veteran" },
+          ],
+        },
+        {
+          name: "earnedAt",
+          type: "date",
+          label: "Kazanıldığı Tarih",
+        },
+      ],
+    },
+
+    // ─── İSTATİSTİKLER (denormalized) ────────────────────────
+    // Profil sayfasında hızlı gösterim için.
+    // Sorguda JOIN yapmamak adına burada tutulur.
+    {
+      name: "questionCount",
+      type: "number",
+      label: "Soru Sayısı",
+      defaultValue: 0,
+      admin: { readOnly: true, position: "sidebar" },
+      access: { update: isFieldAdmin, create: isFieldAdmin },
+    },
+    {
+      name: "answerCount",
+      type: "number",
+      label: "Cevap Sayısı",
+      defaultValue: 0,
+      admin: { readOnly: true, position: "sidebar" },
+      access: { update: isFieldAdmin, create: isFieldAdmin },
+    },
   ],
+
   hooks: {
     beforeChange: [
       ({ req, operation, data }) => {
-        // İSTEK 3 (Devamı): Otomatik atama
         if (operation === "create" && req.user) {
-          // Eğer işlemi yapan kişi Admin DEĞİLSE (yani Editör ise)
           if (req.user.roles !== "admin") {
-            // 1. Oluşturan editörün grubunu yeni kullanıcıya ata
             if (req.user.group) {
-              // Group bazen obje bazen ID gelebilir, kontrol et
               const groupID =
                 typeof req.user.group === "object"
                   ? req.user.group.id
                   : req.user.group;
               data.group = groupID;
             }
-
-            // 2. Rolü otomatik olarak 'user' (veya isterseniz 'editor') ata
-            // Editör kendi altına birini ekliyorsa genelde 'user' olur.
-            // Ama "editör kullanıcısı oluşturabilecek" dediğiniz için 'editor' de yapabilirsiniz.
-            // Burayı ihtiyacınıza göre değiştirin:
             data.roles = "user";
           }
         }
